@@ -29,6 +29,7 @@ import 'package:common/util/logger.dart';
 import 'package:common/util/time_util.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -52,13 +53,9 @@ class SelectFileBottomSheet extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final model = ref.watch(_selectFileBottomSheetControllerProvider(args.machineUUID, args.path));
-    final controller = ref.watch(_selectFileBottomSheetControllerProvider(args.machineUUID, args.path).notifier);
-    final dateFormat = ref.watch(dateFormatServiceProvider).add_Hm(DateFormat.yMd(context.deviceLocale.languageCode));
-
     var split = args.path.split('/');
     final isRoot = split.length <= 1;
-    final folderName = split.lastOrNull ?? 'TODO';
+    final folderName = split.lastOrNull ?? 'Unknown';
 
     return SheetContentScaffold(
       topBar: ListTile(
@@ -86,8 +83,6 @@ class _Body extends ConsumerWidget {
     final model = ref.watch(_selectFileBottomSheetControllerProvider(args.machineUUID, args.path));
     final controller = ref.watch(_selectFileBottomSheetControllerProvider(args.machineUUID, args.path).notifier);
 
-    talker.warning("ROFL: ${model.isLoading}, ${model.isRefreshing} $model");
-
     final widget = switch (model) {
       AsyncValue(hasValue: true, value: _Model(:final sortConfig, :final folderContent) && final content) =>
         _FileListData(
@@ -111,8 +106,6 @@ class _Body extends ConsumerWidget {
       duration: kThemeAnimationDuration,
       switchInCurve: Curves.easeInOutSine,
       switchOutCurve: Curves.easeInOutSine.flipped,
-      // switchInCurve: Curves.easeInOutCubicEmphasized,
-      // switchOutCurve: Curves.easeInOutCubicEmphasized.flipped,
       child: widget,
     );
   }
@@ -135,7 +128,7 @@ class _FileListData extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = ref.watch(dateFormatServiceProvider).add_Hm(DateFormat.yMd(context.deviceLocale.languageCode));
-
+    final themeData = Theme.of(context);
     return CustomScrollView(
       slivers: [
         AdaptiveHeightSliverPersistentHeader(
@@ -144,7 +137,25 @@ class _FileListData extends ConsumerWidget {
           needRepaint: true,
           child: SortedFileListHeader(activeSortConfig: sortConfig, onTapSortMode: onSortMode),
         ),
-
+        if (folderContent.isEmpty)
+          SliverFillRemaining(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: FractionallySizedBox(
+                    heightFactor: 0.3,
+                    child: SvgPicture.asset('assets/vector/undraw_void_-3-ggu.svg'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('pages.files.empty_folder.title', style: themeData.textTheme.titleMedium).tr(),
+                Text('pages.files.empty_folder.subtitle', style: themeData.textTheme.bodySmall).tr(),
+              ],
+            ),
+          ),
+        if (folderContent.isNotEmpty)
         SliverPadding(
           padding: MediaQuery.viewPaddingOf(context),
           sliver: SliverList.separated(
@@ -327,22 +338,31 @@ class _SelectFileBottomSheetController extends _$SelectFileBottomSheetController
     ref.invalidateSelf();
   }
 
-  Future<void> onSelectFile(RemoteFile file) async {
-    talker.info('[_SelectFileBottomSheetController($machineUUID, $filePath)] Selected file: $file');
+	Future<void> onSelectFile(RemoteFile file) async {
+		talker.info('[_SelectFileBottomSheetController($machineUUID, $filePath)] Selected file: $file');
 
-    if (file is Folder) {
-      _bottomSheetService.show(
-        BottomSheetConfig(
-          type: SheetType.selectPrintJob,
-          data: SelectFileBottomSheetArgs(machineUUID, file.absolutPath),
-        ),
-      );
-    } else if (file is GCodeFile) {
-      _goRouter.pop(BottomSheetResult.confirmed(file));
-    } else {
-      talker.warning('[_SelectFileBottomSheetController($machineUUID, $filePath)] Unsupported file type: $file');
-    }
-  }
+		if (file is Folder) {
+			final result = await _bottomSheetService.show(
+				BottomSheetConfig(
+					type: SheetType.selectPrintJob,
+					data: SelectFileBottomSheetArgs(machineUUID, file.absolutPath),
+				),
+			);
+			if (result.confirmed == true && result.data != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_goRouter.canPop()) {
+            _goRouter.pop(BottomSheetResult.confirmed(result.data));
+          }
+        });
+			}
+			// If dismissed or no selection, do nothing (stay in current sheet)
+
+		} else if (file is GCodeFile) {
+			_goRouter.pop(BottomSheetResult.confirmed(file));
+		} else {
+			talker.warning('[_SelectFileBottomSheetController($machineUUID, $filePath)] Unsupported file type: $file');
+		}
+	}
 
   void _onFileNotification(FileActionResponse notification) {
     talker.info('[_SelectFileBottomSheetController($machineUUID, $filePath)] Got a file notification: $notification');

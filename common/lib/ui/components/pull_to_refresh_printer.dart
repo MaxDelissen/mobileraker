@@ -20,20 +20,19 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 class PullToRefreshPrinter extends ConsumerStatefulWidget {
-  const PullToRefreshPrinter({super.key, this.child, this.enablePullDown = true, this.scrollController, this.physics});
+  const PullToRefreshPrinter({super.key, this.child, this.enablePullDown = true});
 
   final Widget? child;
 
+
   final bool enablePullDown;
-  final ScrollController? scrollController;
-  final ScrollPhysics? physics;
 
   @override
   ConsumerState createState() => _PullToRefreshPrinterState();
 }
 
 class _PullToRefreshPrinterState extends ConsumerState<PullToRefreshPrinter> {
-  final RefreshController refreshController = RefreshController(initialRefresh: false);
+  final RefreshController refreshController = RefreshController();
 
   SnackBarService get snackBarService => ref.read(snackBarServiceProvider);
 
@@ -43,20 +42,11 @@ class _PullToRefreshPrinterState extends ConsumerState<PullToRefreshPrinter> {
 
   @override
   Widget build(BuildContext context) {
-    var onBackground = Theme.of(context).colorScheme.onBackground;
     return SmartRefresher(
-      enablePullDown: widget.enablePullDown,
-      header: ClassicHeader(
-        textStyle: TextStyle(color: onBackground),
-        failedIcon: Icon(Icons.error, color: onBackground),
-        completeIcon: Icon(Icons.done, color: onBackground),
-        idleIcon: Icon(Icons.arrow_downward, color: onBackground),
-        releaseIcon: Icon(Icons.refresh, color: onBackground),
-      ),
       controller: refreshController,
-      scrollController: widget.scrollController,
-      physics: widget.physics,
       onRefresh: onRefresh,
+      enablePullDown: widget.enablePullDown,
+      // These params are only forwarded if the child is not a Scrollable itself
       child: widget.child,
     );
   }
@@ -67,7 +57,7 @@ class _PullToRefreshPrinterState extends ConsumerState<PullToRefreshPrinter> {
       selMachine = await ref.read(selectedMachineProvider.future);
 
       if (selMachine == null) {
-        refreshController.refreshFailed();
+        refreshController.refreshCompleted();
         return;
       }
     } catch (_) {

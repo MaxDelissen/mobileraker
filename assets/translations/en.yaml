@@ -71,6 +71,8 @@ general:
   allow: Allow
   deny: Deny
   settings: Settings
+  run: Run
+  enable: Enable
 pages:
   dashboard:
     title: Dashboard
@@ -155,6 +157,15 @@ pages:
         beacon_models: Beacon Models
         beacon_btn: Beacon
         beacon_tooltip: Select beacon model
+        force_move_btn: Force Move
+        force_move_tooltip: "Toggle 'Force Move' mode"
+        force_move_dialog:
+          title: Enable Force Move?
+          body: |-
+            You are about to enable 'Force Move' mode.
+            This bypasses all safety checks and kinematic constraints, moving individual steppers without updating the printer's position state.
+
+            This is a low-level diagnostic tool. Incorrect use can cause mechanical damage. You must issue G28 to re-home and restore proper kinematics after use.
       baby_step_card:
         title: Micro-Step Z-Axis
         z_offset: Z-Offset
@@ -252,6 +263,15 @@ pages:
       title: Editing Mode
       body: You can now reorder, add and remove cards and pages. All cards show preview
         data.
+    rename_layout:
+      title: Rename Layout
+      label: Layout Name
+    layout_rename_snack:
+      title: Layout renamed!
+      body: The layout has been successfully renamed.
+    layout_reset_snack:
+      title: Layout reset!
+      body: The layout has been reset to the default configuration.
     error_save_snack:
       title: Error saving layout!
       body: An error occurred while trying to save the layout.
@@ -497,6 +517,19 @@ pages:
       no_devices_found: No devices found
       configure_btn: Configure
       not_connected_btn: Not connected
+    data:
+      title: Data Import & Export
+      helper: Backup or transfer your app data
+      export:
+        title: Export App Data
+        helper: Save all your machines, layouts and settings to a file for backup or transfer
+
+      import:
+        title: Import App Data
+        helper: Load machines, layouts and settings from a file
+      snack_imported:
+        title: Data imported!
+        message: Imported {} machines and {} layouts.
     developer:
       title: Developer
       crashlytics: Enable Crashlytics reporting
@@ -565,6 +598,7 @@ pages:
       steps_extrude: Extrude steps
       steps_extrude_short: "@:pages.printer_edit.extruders.steps_extrude"
       filament:
+
         loading_distance: Extruder Nozzle Distance
         loading_distance_helper: Distance from the nozzle to the extruder. Used for
           (un)loading filament
@@ -575,6 +609,14 @@ pages:
         purge_amount_helper: Length of filament to purge
         purge_speed: Purge Speed
         purge_speed_helper: Speed for purging filament
+        mode:
+          title: Filament Change Mode
+          default: Default
+          custom: Custom
+        load_gcode: Filament Load G-Code
+        load_gcode_helper: G-Code to load filament
+        unload_gcode: Filament Unload G-Code
+        unload_gcode_helper: G-Code to unload filament
     cams:
       target_fps: Target FPS
       new_cam: New Webcam
@@ -606,6 +648,8 @@ pages:
       hotend_temp: "@:pages.dashboard.general.temp_card.hotend Temperature"
       bed_temp: "@:pages.dashboard.general.temp_card.bed Temperature"
       new_preset: New Preset
+      custom_gcode: Custom GCode
+      custom_gcode_helper: Optional GCode to run after setting the temperature(s)
     confirm_fcm_reset:
       title: Clear Notification Device Registry?
       body: "You are about to reset the device registry, which is used to determine
@@ -1007,11 +1051,8 @@ pages:
     vendor_details:
       page_title: Manufacturer {}
       info_card: Manufacturer Info
-      filaments_card: Filaments by Manufacturer
-      spools_card: Spools by Manufacturer
     filament_details:
       info_card: Filament Info
-      spools_card: Filament Spools
     spool_details:
       page_title: Spool {}
       info_card: Spool Info
@@ -1020,8 +1061,9 @@ pages:
         title: Spool is archived
         body: This spool is archived and can not be used for new prints.
       alternative_spool:
-        same_filament: Alternative Spools (Same Filament)
-        same_material: Alternative Spools (Same Material)
+        title: Alternative Spools
+        same_filament: Same Filament
+        same_material: Same Material
     spool_form:
       create_page_title: Create Spool
       update_page_title: Edit Spool
@@ -1059,6 +1101,7 @@ components:
     installed_version: 'Installed Version:'
   pull_to_refresh:
     pull_up_idle: Pull up to Refresh
+    pull_down_idle: Pull down to Refresh
   nav_drawer:
     printer_settings: Printer Settings
     manage_printers: Manage Printers
@@ -1325,15 +1368,24 @@ dialogs:
         title:
           load: Load Filament
           unload: Unload Filament
+          gcode: Run Custom G-Code
         subtitle:
           load:
             idle: Insert filament into the extruder
             processing: Loading filament...
-            processed: Did the filament reach the nozzle? Repeat if necessary
+            processed: Check filament at nozzle. Adjust and retry if needed
+          load_gcode:
+            idle: Ensure printer is ready for custom load sequence
+            processing: Running load sequence...
+            processed: Confirm filament loaded. Re-run if unsuccessful
           unload:
-            idle: Move filament out of extruder
+            idle: Prepare to remove filament from extruder
             processing: Unloading filament...
-            processed: Did the filament come out of the extruder? Repeat if necessary
+            processed: Check filament removed. Retry if needed
+          unload_gcode:
+            idle: Ensure printer is ready for custom unload sequence
+            processing: Running unload sequence...
+            processed: Confirm filament unloaded. Re-run if unsuccessful
       purge:
         title: Purge Filament
         subtitle:
@@ -1514,12 +1566,9 @@ bottom_sheets:
     available_layouts:
       label: 'Available Layouts:'
       empty: No layouts available
-      add_empty: Add Empty Layout
+      add_empty: Add new Layout
     layout_preview:
       not_saved: Not saved
-    rename_layout:
-      title: Rename Layout
-      label: Layout Name
     delete_layout:
       title: Delete Layout
       body: |-
@@ -1532,6 +1581,11 @@ bottom_sheets:
       title: Error while importing layout!
       body: The layout could not be imported. Please make sure the clipboard contains
         a valid layout.
+    load_layout_warning:
+      title: Load Layout?
+      body: |-
+        Loading a layout will overwrite your current dashboard layout.
+        All unsaved changes will be lost.
   selections:
     no_selections:
       title: No results found
@@ -1540,6 +1594,25 @@ bottom_sheets:
     title: Temperature Chart Settings
   select_file:
     title: Select Print Job
+  file_manager_settings:
+    title: File Manager Settings
+    show_hidden_files:
+      title: Show Hidden Files
+      subtitle: Display files and folders that start with a dot (.)
+    hide_backup_files:
+      title: Hide Backup Files
+      subtitle: Hide all files that are detected as backup files
+  console_settings:
+    title: Console Settings
+    reverse:
+      title: Reverse Order
+      subtitle: Display newest messages first instead of last
+    filter_temp_responses:
+      title: Filter Temperature Responses
+      subtitle: Hide temperature-related diagnostic messages
+    show_timestamps:
+      title: Show Timestamps
+      subtitle: Show when each message was logged
 klipper_state:
   ready: Ready
   shutdown: Shutdown

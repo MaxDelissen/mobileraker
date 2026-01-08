@@ -5,7 +5,7 @@
 
 import 'dart:math';
 
-import 'package:common/data/converters/integer_converter.dart';
+import 'package:common/data/converters/string_integer_converter.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -14,8 +14,8 @@ import '../../enums/webcam_service_type.dart';
 part 'webcam_info.freezed.dart';
 part 'webcam_info.g.dart';
 
-final defaultStreamUri = Uri(path: '/webcam', query: 'action=stream');
-final defaultSnapshotUri = Uri(path: '/webcam', query: 'action=snapshot');
+final defaultStreamUri = Uri(path: '/webcam/', query: 'action=stream');
+final defaultSnapshotUri = Uri(path: '/webcam/', query: 'action=snapshot');
 
 // "1dec5e79-a49e-4742-a169-4abb68aee6a3": {
 // "enabled": true, // fluidd only
@@ -103,12 +103,12 @@ class WebcamInfo with _$WebcamInfo {
     @Default(false) @JsonKey(fromJson: _boolOrInt) bool enabled,
     @Default('') String icon,
     @Default('4:4') String aspectRatio,
-    @Default(5) @IntegerConverter() int targetFpsIdle,
+    @Default(5) @StringIntegerConverter() int targetFpsIdle,
     @Default('unknown') String location,
-    @IntegerConverter() @Default(15) int targetFps,
+    @StringIntegerConverter() @Default(15) int targetFps,
     @JsonKey(fromJson: _boolOrInt) @Default(false) bool flipHorizontal,
     @JsonKey(fromJson: _boolOrInt) @Default(false) bool flipVertical,
-    @IntegerConverter() @Default(0) int rotation,
+    @StringIntegerConverter() @Default(0) int rotation,
     @Default('unknown') String source,
   }) = _WebcamInfo;
 

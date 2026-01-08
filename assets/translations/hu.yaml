@@ -29,7 +29,10 @@ general:
   supported: Támogatott
   unsupported: Nem támogatott
   details: Részletek
+  google_play: Google Play
   ios_store: AppStore
+  google_play_services: Google Play szolgáltatások
+  apple_services: Apple szolgáltatások
   active: Aktív
   canceled: Törölve
   monthly: Havi
@@ -245,6 +248,15 @@ pages:
     editing_card:
       title: Szerkesztési mód
       body: Mostantól átrendezheted, hozzáadhatsz és eltávolíthatsz kártyákat és oldalakat. Minden kártya előnézeti adatokat mutat.
+    rename_layout:
+      title: Elrendezés átnevezése
+      label: Elrendezés neve
+    layout_rename_snack:
+      title: Elrendezés átnevezve!
+      body: A elrendezés átnevezése sikeresen megtörtént.
+    layout_reset_snack:
+      title: Elrendezés visszaállítva!
+      body: Az elrendezés visszaállt az alapértelmezett konfigurációra.
     error_save_snack:
       title: Hiba az elrendezés mentése során!
       body: Hiba történt az elrendezés mentése közben.
@@ -480,6 +492,18 @@ pages:
       no_devices_found: Nem találtam eszközt
       configure_btn: Konfigurálás
       not_connected_btn: Nem csatlakozik
+    data:
+      title: Adatok importálása és exportálása
+      helper: Az alkalmazás adatainak biztonsági mentése vagy átvitele
+      export:
+        title: Alkalmazásadatok exportálása
+        helper: Minden gépet, elrendezést és beállítást mentse egy fájlba biztonsági másolat vagy átvitel céljából
+      import:
+        title: Alkalmazásadatok importálása
+        helper: Gépek, elrendezések és beállítások betöltése fájlból
+      snack_imported:
+        title: Adatok importálva!
+        message: Importált {} gépek és {} elrendezések.
     developer:
       title: Fejlesztő
       crashlytics: Crashlytics jelentések engedélyezése
@@ -583,6 +607,8 @@ pages:
       hotend_temp: "@:pages.dashboard.general.temp_card.hotend Hőmérséklet"
       bed_temp: "@:pages.dashboard.general.temp_card.bed Hőmérséklet"
       new_preset: Új előbeállítás
+      custom_gcode: Egyedi G-kód
+      custom_gcode_helper: A hőmérsékletek beállítása után futtatható opcionális G-kód
     confirm_fcm_reset:
       title: Értesítési eszköz nyilvántartás törlése?
       body: "Most készülsz visszaállítani az eszközregisztert, amely meghatározza, hogy a társ milyen eszközökre küld értesítést.\nA push-értesítések visszaállításához újra kell indítanod az alkalmazást az összes eszközön, és újra csatlakoztatnia kell őket a géphez. \n\nErősítsd meg a műveletet."
@@ -814,6 +840,26 @@ pages:
     trial_disclaimer: Az ingyenes próbaidőszak végéig nem számítunk fel díjat, és a próbaidőszak alatt bármikor lemondhatod az előfizetést.
     subscription_disclaimer: Az előfizetés automatikusan megújul. Bármikor lemondhatod.
     restore_sign_in: Visszaállítás / Bejelentkezés
+    loading:
+      title: Támogatói szintek betöltése
+    services_unavailable:
+      title: "{} Fiókbejelentkezés nem elérhető"
+      description: "{} nincs telepítve vagy konfigurálva ezen eszközön. Ha prémium fiókkal rendelkezel, akkor is hozzáférhetsz kézi bejelentkezéssel."
+      solutions_title: Lehetséges megoldások
+      install_services: "Telepítsd a {} alkalmazást az alkalmazásboltból"
+      update_services: "Frissítsd a {} fájlt, ha már telepítve van"
+      manual_signin: Ha máshol szerezted meg a támogatói státuszt, jelentkezz be manuálisan
+      signin_btn: Bejelentkezés
+      retry_btn: Csatlakozás újrapróbálása
+      github_btn: Támogatás a GitHub-on
+    fetch_error:
+      title: A támogatói szintek betöltése nem sikerült
+      description: Probléma merült fel a támogatói szintek betöltése közben. Ez hálózati kapcsolat vagy szerverproblémák miatt lehet.
+      what_to_try: Mit próbálhat ki
+      check_connection: Ellenőrizd az internetkapcsolatot
+      wait_retry: Várj egy pillanatot, majd próbáld újra
+      try_later: Ha a probléma továbbra is fennáll, próbálkozz újra később
+      try_again_btn: Próbáld újra
   video_player:
     downloading_for_sharing: Videó letöltése megosztáshoz… ({})
   tool:
@@ -927,11 +973,8 @@ pages:
     vendor_details:
       page_title: Gyártó {}
       info_card: Gyártói információ
-      filaments_card: Nyomtatószálak gyártó szerint
-      spools_card: Orsók gyártó szerint
     filament_details:
       info_card: Nyomtatószál infó
-      spools_card: Nyomtatószál orsók
     spool_details:
       page_title: Orsó {}
       info_card: Orsó infó
@@ -940,8 +983,9 @@ pages:
         title: Archivált orsó
         body: Ez az orsó archiválva van, és nem használható új nyomtatáshoz.
       alternative_spool:
-        same_filament: Alternatív orsók (ugyanaz a szál)
-        same_material: Alternatív orsók (azonos anyag)
+        title: Alternatív orsók
+        same_filament: Ugyanaz a szál
+        same_material: Azonos anyag
     spool_form:
       create_page_title: Orsó létrehozása
       update_page_title: Orsó szerkesztése
@@ -973,6 +1017,7 @@ components:
     installed_version: 'Telepített verzió:'
   pull_to_refresh:
     pull_up_idle: Húzza fel a Frissítéshez
+    pull_down_idle: Húzd lefelé a frissítéshez
   nav_drawer:
     printer_settings: Nyomtató beállítások
     manage_printers: Nyomtatók kezelése
@@ -1229,11 +1274,8 @@ dialogs:
           load:
             idle: Helyezz nyomtatószálat az adagolóba
             processing: Nyomtatószál betöltése...
-            processed: Elérte a nyomtatószál a fúvókát? Ismételd meg, ha szükséges
           unload:
-            idle: Adja ki a nyomtatószálat az adagolóból
             processing: Nyomtatószál kiadása...
-            processed: Kijött a nyomtatószál az adagolóból? Ismételd meg, ha szükséges
       purge:
         title: Nyomtatószál tisztítás
         subtitle:
@@ -1388,12 +1430,9 @@ bottom_sheets:
     available_layouts:
       label: 'Elérhető elrendezések:'
       empty: Nincs elérhető elrendezés
-      add_empty: Üres elrendezés hozzáadása
+      add_empty: Új elrendezés hozzáadása
     layout_preview:
       not_saved: Nincs mentve
-    rename_layout:
-      title: Elrendezés átnevezése
-      label: Elrendezés neve
     delete_layout:
       title: Elrendezés törlése
       body: |-
@@ -1405,6 +1444,11 @@ bottom_sheets:
     falsy_import_snackbar:
       title: Hiba az elrendezés importálásakor!
       body: Az elrendezést nem lehetett importálni. Kérjük, ellenőrizd, hogy a vágólapon van-e érvényes elrendezés.
+    load_layout_warning:
+      title: Terhelés elrendezés?
+      body: |-
+        A sablon betöltése felülírja az aktuális irányítópult sablonját.
+        Minden nem mentett módosítás elveszik.
   selections:
     no_selections:
       title: Nem találtam eredményt
@@ -1413,6 +1457,25 @@ bottom_sheets:
     title: Hőmérséklet diagram beállítások
   select_file:
     title: Nyomtatási feladat kiválasztása
+  file_manager_settings:
+    title: Fájlkezelő beállítások
+    show_hidden_files:
+      title: Rejtett fájlok megjelenítése
+      subtitle: A ponttal (.) kezdődő fájlok és mappák megjelenítése
+    hide_backup_files:
+      title: Biztonsági másolatok elrejtése
+      subtitle: Az összes biztonsági másolatként észlelt fájl elrejtése
+  console_settings:
+    title: Konzol beállítások
+    reverse:
+      title: Fordított sorrend
+      subtitle: A legújabb üzeneteket először, a legutóbbiakat utoljára jelenítsd meg
+    filter_temp_responses:
+      title: Hőmérsékleti reakciók szűrése
+      subtitle: Hőmérséklethez kapcsolódó diagnosztikai üzenetek elrejtése
+    show_timestamps:
+      title: Időbélyegek megjelenítése
+      subtitle: Az egyes üzenetek naplózásának időpontjának megjelenítése
 klipper_state:
   ready: Kész
   shutdown: Leállítás

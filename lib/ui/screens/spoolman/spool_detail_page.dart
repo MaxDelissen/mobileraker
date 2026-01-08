@@ -89,7 +89,9 @@ class _SpoolDetailPage extends HookConsumerWidget {
       machineUUID: machineUUID,
       titleBuilder: (ctx, total) => ListTile(
         leading: const Icon(Icons.color_lens_outlined),
-        title: const Text('pages.spoolman.spool_details.alternative_spool.same_filament').tr(),
+        titleAlignment: ListTileTitleAlignment.center,
+        title: const Text('pages.spoolman.spool_details.alternative_spool.title').tr(),
+        subtitle: const Text('pages.spoolman.spool_details.alternative_spool.same_filament').tr(),
         trailing: total != null && total > 0
             ? Chip(
                 visualDensity: VisualDensity.compact,
@@ -106,7 +108,9 @@ class _SpoolDetailPage extends HookConsumerWidget {
       machineUUID: machineUUID,
       titleBuilder: (ctx, total) => ListTile(
         leading: const Icon(Icons.spoke_outlined),
-        title: const Text('pages.spoolman.spool_details.alternative_spool.same_material').tr(),
+        titleAlignment: ListTileTitleAlignment.center,
+        title: const Text('pages.spoolman.spool_details.alternative_spool.title').tr(),
+        subtitle: const Text('pages.spoolman.spool_details.alternative_spool.same_material').tr(),
         trailing: total != null && total > 0
             ? Chip(
                 visualDensity: VisualDensity.compact,
@@ -132,24 +136,21 @@ class _SpoolDetailPage extends HookConsumerWidget {
       body: SafeArea(
         child: SmartRefresher(
           controller: refreshController,
-          onRefresh: () async {
+          onRefresh: () {
             final spool = ref.read(_spoolProvider);
 
-            try {
-              await ref.refresh(spoolProvider(machineUUID, spool.id).future);
-              refreshController.refreshCompleted();
-            } catch (e) {
-              refreshController.refreshFailed();
-            }
+            ref
+                .refresh(spoolProvider(machineUUID, spool.id).future)
+                .then(
+                  (_) {
+                    refreshController.refreshCompleted();
+                  },
+                  onError: (_, _) {
+                    refreshController.refreshFailed();
+                  },
+                );
           },
-          header: ClassicHeader(
-            textStyle: TextStyle(color: themeData.colorScheme.onSurface),
-            completeIcon: Icon(Icons.done, color: themeData.colorScheme.onSurface),
-            releaseIcon: Icon(
-              Icons.refresh,
-              color: themeData.colorScheme.onSurface,
-            ),
-          ),
+
           child: ListView(
             children: [
               WarningCard(
@@ -161,10 +162,7 @@ class _SpoolDetailPage extends HookConsumerWidget {
                 subtitle: const Text('pages.spoolman.spool_details.archived_warning.body').tr(),
               ),
               _SpoolInfo(machineUUID: machineUUID),
-              if (context.isCompact) ...[
-                sameFilamentSpoolList,
-                sameMaterialSpoolList,
-              ],
+              if (context.isCompact) ...[sameFilamentSpoolList, sameMaterialSpoolList],
               if (context.isLargerThanCompact)
                 IntrinsicHeight(
                   child: Row(
@@ -193,10 +191,7 @@ class _AppBar extends HookConsumerWidget implements PreferredSizeWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final spool = ref.watch(_spoolDetailPageControllerProvider(machineUUID).select((data) => data.spool));
 
-    final title = [
-      if (spool.filament.vendor != null) spool.filament.vendor!.name,
-      spool.filament.name,
-    ].join(' – ');
+    final title = [if (spool.filament.vendor != null) spool.filament.vendor!.name, spool.filament.name].join(' – ');
     return AppBar(title: const Text('pages.spoolman.spool_details.page_title').tr(args: [title]));
   }
 
@@ -217,17 +212,18 @@ class _SpoolInfo extends ConsumerWidget {
     final dateFormatService = ref.watch(dateFormatServiceProvider);
     final dateFormatGeneral = dateFormatService.add_Hm(DateFormat.yMMMd());
 
-    final numberFormatDouble =
-        NumberFormat.decimalPatternDigits(locale: context.locale.toStringWithSeparator(), decimalDigits: 2);
-    final numberFormatPrice =
-        NumberFormat.simpleCurrency(locale: context.locale.toStringWithSeparator(), name: spoolmanCurrency);
+    final numberFormatDouble = NumberFormat.decimalPatternDigits(
+      locale: context.locale.toStringWithSeparator(),
+      decimalDigits: 2,
+    );
+    final numberFormatPrice = NumberFormat.simpleCurrency(
+      locale: context.locale.toStringWithSeparator(),
+      name: spoolmanCurrency,
+    );
 
     final hasVendor = spool.filament.vendor != null;
     final properties = [
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.id'),
-        property: spool.id.toString(),
-      ),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.id'), property: spool.id.toString()),
       PropertyWithTitle.text(
         title: tr('pages.spoolman.properties.registered'),
         property: dateFormatGeneral.format(spool.registered),
@@ -244,18 +240,19 @@ class _SpoolInfo extends ConsumerWidget {
                 if (hasVendor) ...[
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
-                    child: Icon(FlutterIcons.external_link_faw,
-                        size: (DefaultTextStyle.of(context).style.fontSize ?? 14) + 2),
+                    child: Icon(
+                      FlutterIcons.external_link_faw,
+                      size: (DefaultTextStyle.of(context).style.fontSize ?? 14) + 2,
+                    ),
                   ),
-                  const WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: SizedBox(width: 4),
-                  ),
+                  const WidgetSpan(alignment: PlaceholderAlignment.middle, child: SizedBox(width: 4)),
                 ],
                 TextSpan(
                   text: spool.filament.vendor?.name ?? '–',
-                  style: TextStyle(color: Theme.of(context).primaryColor, decoration: TextDecoration.underline)
-                      .only(hasVendor),
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    decoration: TextDecoration.underline,
+                  ).only(hasVendor),
                 ),
               ],
             ),
@@ -278,10 +275,7 @@ class _SpoolInfo extends ConsumerWidget {
                     size: (DefaultTextStyle.of(context).style.fontSize ?? 14) + 2,
                   ),
                 ),
-                const WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: SizedBox(width: 4),
-                ),
+                const WidgetSpan(alignment: PlaceholderAlignment.middle, child: SizedBox(width: 4)),
                 TextSpan(
                   text:
                       '${spool.filament.name ?? tr('pages.spoolman.filament.one')}${spool.filament.material != null ? ' (${spool.filament.material})' : ''}',
@@ -314,8 +308,10 @@ class _SpoolInfo extends ConsumerWidget {
       ),
       PropertyWithTitle.text(
         title: tr('pages.spoolman.properties.spool_weight'),
-        property: (spool.spoolWeight ?? spool.filament.spoolWeight ?? spool.filament.vendor?.spoolWeight)
-                ?.let(numberFormatDouble.formatGrams) ??
+        property:
+            (spool.spoolWeight ?? spool.filament.spoolWeight ?? spool.filament.vendor?.spoolWeight)?.let(
+              numberFormatDouble.formatGrams,
+            ) ??
             '–',
       ),
       PropertyWithTitle.text(
@@ -334,14 +330,8 @@ class _SpoolInfo extends ConsumerWidget {
         title: tr('pages.spoolman.properties.used_length'),
         property: spool.usedLength.let(numberFormatDouble.formatMillimeters),
       ),
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.location'),
-        property: spool.location ?? '–',
-      ),
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.lot_number'),
-        property: spool.lotNr ?? '–',
-      ),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.location'), property: spool.location ?? '–'),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.lot_number'), property: spool.lotNr ?? '–'),
     ];
 
     return Card(
@@ -358,8 +348,9 @@ class _SpoolInfo extends ConsumerWidget {
             trailing: Consumer(
               builder: (context, ref, child) {
                 final themeData = Theme.of(context);
-                final isActive =
-                    ref.watch(_spoolDetailPageControllerProvider(machineUUID).select((data) => data.spoolIsActive));
+                final isActive = ref.watch(
+                  _spoolDetailPageControllerProvider(machineUUID).select((data) => data.spoolIsActive),
+                );
 
                 return AnimatedSwitcher(
                   duration: kThemeAnimationDuration,
@@ -376,10 +367,7 @@ class _SpoolInfo extends ConsumerWidget {
             ),
           ),
           if (spool.progress != null)
-            LinearProgressIndicator(
-              backgroundColor: spool.filament.color,
-              value: spool.progress,
-            ),
+            LinearProgressIndicator(backgroundColor: spool.filament.color, value: spool.progress),
           if (spool.progress == null) const Divider(),
           Padding(
             padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
@@ -423,8 +411,14 @@ class _SpoolList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final spool = ref.watch(_spoolDetailPageControllerProvider(machineUUID).select((data) => data.spool));
 
-    final totalItems = ref.watch(spoolListProvider(machineUUID, pageSize: _initial, page: 0, filters: filters)
-        .select((d) => d.valueOrNull?.totalItems?.let((d) => max(d - 1, 0))));
+    final totalItems = ref.watch(
+      spoolListProvider(
+        machineUUID,
+        pageSize: _initial,
+        page: 0,
+        filters: filters,
+      ).select((d) => d.valueOrNull?.totalItems?.let((d) => max(d - 1, 0))),
+    );
 
     return Card(
       child: Column(
@@ -479,37 +473,41 @@ class _SpoolDetailPageController extends _$SpoolDetailPageController with Common
       if (spool.filament.material != null) spool.filament.material,
     ];
 
-    final res = await bottomSheetServiceRef.show(BottomSheetConfig(
-      type: SheetType.actions,
-      data: ActionBottomSheetArgs(
-        title: RichText(
-          text: TextSpan(
-            text: '#${spool.id} ',
-            style: themeData.textTheme.titleSmall
-                ?.copyWith(fontSize: themeData.textTheme.titleSmall?.fontSize?.let((it) => it - 2)),
-            children: [
-              TextSpan(text: '${spool.filament.name}', style: themeData.textTheme.titleSmall),
-            ],
+    final res = await bottomSheetServiceRef.show(
+      BottomSheetConfig(
+        type: SheetType.actions,
+        data: ActionBottomSheetArgs(
+          title: RichText(
+            text: TextSpan(
+              text: '#${spool.id} ',
+              style: themeData.textTheme.titleSmall?.copyWith(
+                fontSize: themeData.textTheme.titleSmall?.fontSize?.let((it) => it - 2),
+              ),
+              children: [TextSpan(text: '${spool.filament.name}', style: themeData.textTheme.titleSmall)],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          subtitle: Text(
+            metaTags.isEmpty ? tr('pages.spoolman.spool.one') : metaTags.join(' – '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          leading: SpoolWidget(color: spool.filament.colorHex, height: 33, width: 15),
+          actions: [
+            if (!isActive) SpoolSpoolmanSheetAction.activate,
+            if (isActive) SpoolSpoolmanSheetAction.deactivate,
+            SpoolSpoolmanSheetAction.edit,
+            SpoolSpoolmanSheetAction.clone,
+            SpoolSpoolmanSheetAction.adjustFilament,
+            SpoolSpoolmanSheetAction.shareQrCode,
+            if (!spool.archived) SpoolSpoolmanSheetAction.archive,
+            if (spool.archived) SpoolSpoolmanSheetAction.unarchive,
+            SpoolSpoolmanSheetAction.delete,
+          ],
         ),
-        subtitle: Text(metaTags.isEmpty ? tr('pages.spoolman.spool.one') : metaTags.join(' – '),
-            maxLines: 1, overflow: TextOverflow.ellipsis),
-        leading: SpoolWidget(color: spool.filament.colorHex, height: 33, width: 15),
-        actions: [
-          if (!isActive) SpoolSpoolmanSheetAction.activate,
-          if (isActive) SpoolSpoolmanSheetAction.deactivate,
-          SpoolSpoolmanSheetAction.edit,
-          SpoolSpoolmanSheetAction.clone,
-          SpoolSpoolmanSheetAction.adjustFilament,
-          SpoolSpoolmanSheetAction.shareQrCode,
-          if (!spool.archived) SpoolSpoolmanSheetAction.archive,
-          if (spool.archived) SpoolSpoolmanSheetAction.unarchive,
-          SpoolSpoolmanSheetAction.delete,
-        ],
       ),
-    ));
+    );
 
     if (!res.confirmed) return;
     talker.info('[SpoolDetailPage] Action: ${res.data}');
@@ -554,10 +552,7 @@ class _SpoolDetailPageController extends _$SpoolDetailPageController with Common
 
       talker.info('Generating QR Code for spool ${spool.id} with data: $qrData');
 
-      final qrCode = QrCode.fromData(
-        data: qrData,
-        errorCorrectLevel: QrErrorCorrectLevel.H,
-      );
+      final qrCode = QrCode.fromData(data: qrData, errorCorrectLevel: QrErrorCorrectLevel.H);
 
       final qrImage = QrImage(qrCode);
       final qrImageBytes = await qrImage.toImageAsBytes(
@@ -569,20 +564,24 @@ class _SpoolDetailPageController extends _$SpoolDetailPageController with Common
       );
       final bytes = Uint8List.sublistView(qrImageBytes!);
 
-      await Share.shareXFiles(
-        [XFile.fromData(bytes, mimeType: 'image/png', name: 'spoolman-sID_${spool.id}.png')],
-        subject: 'Spool QR',
-        sharePositionOrigin: origin,
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile.fromData(bytes, mimeType: 'image/png', name: 'spoolman-sID_${spool.id}.png')],
+          subject: 'Spool QR',
+          sharePositionOrigin: origin,
+        ),
       );
     } catch (e, s) {
       talker.error('Error while generating and sharing QR Code', e, s);
-      snackBarServiceRef.show(SnackBarConfig.stacktraceDialog(
-        dialogService: dialogServiceRef,
-        snackTitle: 'Unexpected Error',
-        snackMessage: 'An unexpected error occurred while generating the QR Code. Please try again.',
-        exception: e,
-        stack: s,
-      ));
+      snackBarServiceRef.show(
+        SnackBarConfig.stacktraceDialog(
+          dialogService: dialogServiceRef,
+          snackTitle: 'Unexpected Error',
+          snackMessage: 'An unexpected error occurred while generating the QR Code. Please try again.',
+          exception: e,
+          stack: s,
+        ),
+      );
     }
   }
 
@@ -607,18 +606,22 @@ class _SpoolDetailPageController extends _$SpoolDetailPageController with Common
       // required to wait for rebuild of provider...
       // await Future.delayed(Duration(milliseconds: 250));
 
-      snackBarServiceRef.show(SnackBarConfig(
-        type: SnackbarType.info,
-        title: tr('pages.spoolman.update.success.title', args: [tr('pages.spoolman.spool.one')]),
-        message: tr('pages.spoolman.update.success.message', args: [tr('pages.spoolman.spool.one')]),
-      ));
+      snackBarServiceRef.show(
+        SnackBarConfig(
+          type: SnackbarType.info,
+          title: tr('pages.spoolman.update.success.title', args: [tr('pages.spoolman.spool.one')]),
+          message: tr('pages.spoolman.update.success.message', args: [tr('pages.spoolman.spool.one')]),
+        ),
+      );
     } catch (e, s) {
       talker.error('Error while adjusting filament on spool', e, s);
-      snackBarServiceRef.show(SnackBarConfig(
-        type: SnackbarType.error,
-        title: tr('pages.spoolman.update.error.title', args: [tr('pages.spoolman.spool.one')]),
-        message: tr('pages.spoolman.update.error.message'),
-      ));
+      snackBarServiceRef.show(
+        SnackBarConfig(
+          type: SnackbarType.error,
+          title: tr('pages.spoolman.update.error.title', args: [tr('pages.spoolman.spool.one')]),
+          message: tr('pages.spoolman.update.error.message'),
+        ),
+      );
     }
   }
 }

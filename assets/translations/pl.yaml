@@ -2,6 +2,7 @@
 general:
   pause: Pauza
   resume: Wznów
+  connect: Połącz
   connected: Połączono
   'off': 'Wyłącz'
   'on': 'Włącz'
@@ -28,7 +29,10 @@ general:
   supported: Wspierane
   unsupported: Niewspierane
   details: Szczegóły
+  google_play: Google Play
   ios_store: AppStore
+  google_play_services: Usługi Google Play
+  apple_services: Usługi Apple
   active: Aktywny
   canceled: Anulowano
   monthly: Comiesięcznie
@@ -66,6 +70,7 @@ general:
   print: Drukuj
   allow: Zezwól
   deny: Zabroń
+  settings: Ustawienia
 pages:
   dashboard:
     title: Panel
@@ -138,6 +143,7 @@ pages:
         ztilt_btn: Z-Tilt
         poff_tooltip:
         poff_btn: Kalibracja Probe
+        zoff_tooltip: Uruchom kalibrację Z offset
         zoff_btn: Kalibracja krańcówki Z
         bsa_tooltip: Uruchom kalibrację regulacji śrub stołu
         bsa_btn: Regulacja śrub stołu
@@ -349,6 +355,7 @@ pages:
       stat_card:
         title: Statystyki
       preheat_dialog:
+        title: "@:pages.files.gcode_file_actions.preheat ?"
         body: |-
           Zadane temperatury
           Ekstruder: {}°C
@@ -792,11 +799,8 @@ pages:
     vendor_details:
       page_title: Producent {}
       info_card: Informacje o producencie
-      filaments_card: Filamenty od producenta
-      spools_card: Szpule od producenta
     filament_details:
       info_card: Informacje o filamencie
-      spools_card: Szpule filamentu
     spool_details:
       page_title: Szpula {}
       info_card: Informacje o szpuli
@@ -805,8 +809,9 @@ pages:
         title: Szpula jest zarchiwizowana
         body: Ta szpula jest zarchiwizowana i nie może być użyta do nowych wydruków.
       alternative_spool:
-        same_filament: Alternatywne szpule (ten sam filament)
-        same_material: Alternatywne szpule (ten sam materiał)
+        title: Alternatywne szpule
+        same_filament: Ten sam filament
+        same_material: Ten sam materiał
     spool_form:
       create_page_title: Utwórz szpulę
       update_page_title: Edytuj szpulę
@@ -1082,12 +1087,8 @@ bottom_sheets:
     available_layouts:
       label: 'Dostępne układy:'
       empty: Brak dostępnych układów
-      add_empty: Dodaj pusty układ
     layout_preview:
       not_saved: Nie zapisano
-    rename_layout:
-      title: Zmień nazwę układu
-      label: Nazwa układu
     delete_layout:
       title: Usuń układ
       body: |-

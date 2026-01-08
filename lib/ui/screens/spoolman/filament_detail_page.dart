@@ -67,7 +67,6 @@ class _FilamentDetailPage extends HookConsumerWidget {
     final refreshController = useMemoized(() => RefreshController(), const []);
     useEffect(() => refreshController.dispose, const []);
 
-    final themeData = Theme.of(context);
     final controller = ref.watch(_filamentDetailPageControllerProvider(machineUUID).notifier);
     return Scaffold(
       appBar: _AppBar(machineUUID: machineUUID),
@@ -77,24 +76,19 @@ class _FilamentDetailPage extends HookConsumerWidget {
       ),
       body: SmartRefresher(
         controller: refreshController,
-        onRefresh: () async {
+        onRefresh: () {
           final filament = ref.read(_filamentProvider);
-
-          try {
-            await ref.refresh(filamentProvider(machineUUID, filament.id).future);
-            refreshController.refreshCompleted();
-          } catch (e) {
-            refreshController.refreshFailed();
-          }
+          ref
+              .refresh(filamentProvider(machineUUID, filament.id).future)
+              .then(
+                (_) {
+                  refreshController.refreshCompleted();
+                },
+                onError: (_, _) {
+                  refreshController.refreshFailed();
+                },
+              );
         },
-        header: ClassicHeader(
-          textStyle: TextStyle(color: themeData.colorScheme.onSurface),
-          completeIcon: Icon(Icons.done, color: themeData.colorScheme.onSurface),
-          releaseIcon: Icon(
-            Icons.refresh,
-            color: themeData.colorScheme.onSurface,
-          ),
-        ),
         child: ListView(
           children: [
             _FilamentInfo(machineUUID: machineUUID),
@@ -117,10 +111,7 @@ class _AppBar extends HookConsumerWidget implements PreferredSizeWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var filament = ref.watch(_filamentDetailPageControllerProvider(machineUUID));
     // pages.spoolman.filament.one
-    var title = [
-      if (filament.vendor != null) filament.vendor!.name,
-      filament.name,
-    ].join(' – ');
+    var title = [if (filament.vendor != null) filament.vendor!.name, filament.name].join(' – ');
 
     if (filament.material != null) {
       title += ' (${filament.material})';
@@ -146,25 +137,20 @@ class _FilamentInfo extends ConsumerWidget {
     final dateFormatService = ref.watch(dateFormatServiceProvider);
     final dateFormatGeneral = dateFormatService.add_Hm(DateFormat.yMMMd());
 
-    final numberFormatPrice =
-        NumberFormat.simpleCurrency(locale: context.locale.toStringWithSeparator(), name: spoolmanCurrency);
-    final numberFormatDouble =
-        NumberFormat.decimalPatternDigits(locale: context.locale.toStringWithSeparator(), decimalDigits: 2);
+    final numberFormatPrice = NumberFormat.simpleCurrency(
+      locale: context.locale.toStringWithSeparator(),
+      name: spoolmanCurrency,
+    );
+    final numberFormatDouble = NumberFormat.decimalPatternDigits(
+      locale: context.locale.toStringWithSeparator(),
+      decimalDigits: 2,
+    );
 
     final hasVendor = filament.vendor != null;
     final properties = [
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.id'),
-        property: filament.id.toString(),
-      ),
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.name'),
-        property: filament.name ?? '–',
-      ),
-      PropertyWithTitle.text(
-        title: tr('pages.spoolman.properties.material'),
-        property: filament.material ?? '–',
-      ),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.id'), property: filament.id.toString()),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.name'), property: filament.name ?? '–'),
+      PropertyWithTitle.text(title: tr('pages.spoolman.properties.material'), property: filament.material ?? '–'),
       GestureDetector(
         onTap: () {
           controller.onEntryTap(filament.vendor!);
@@ -182,15 +168,14 @@ class _FilamentInfo extends ConsumerWidget {
                       size: (DefaultTextStyle.of(context).style.fontSize ?? 14) + 2,
                     ),
                   ),
-                  const WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: SizedBox(width: 4),
-                  ),
+                  const WidgetSpan(alignment: PlaceholderAlignment.middle, child: SizedBox(width: 4)),
                 ],
                 TextSpan(
                   text: filament.vendor?.name ?? '–',
-                  style: TextStyle(color: Theme.of(context).primaryColor, decoration: TextDecoration.underline)
-                      .only(hasVendor),
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    decoration: TextDecoration.underline,
+                  ).only(hasVendor),
                 ),
               ],
             ),
@@ -283,32 +268,49 @@ class _FilamentSpools extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(_filamentDetailPageControllerProvider(machineUUID).notifier);
-    final model = ref.watch(_filamentDetailPageControllerProvider(machineUUID).select((d) => d.id));
+    final model = ref.watch(_filamentDetailPageControllerProvider(machineUUID));
     useAutomaticKeepAlive();
 
-    final filter = SpoolmanFilter({'filament.id': model});
+    var title = [if (model.vendor != null) model.vendor!.name, model.name].join(' – ');
+
+    if (model.material != null) {
+      title += ' (${model.material})';
+    }
+
+
+    final filter = SpoolmanFilter({'filament.id': model.id});
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Consumer(builder: (context, ref, _) {
-            final themeData = Theme.of(context);
-            final numFormat = NumberFormat.compact(locale: context.locale.toStringWithSeparator());
-            final total = ref.watch(spoolListProvider(machineUUID, pageSize: _initial, page: 0, filters: filter)
-                .select((d) => d.valueOrNull?.totalItems));
-            return ListTile(
-              leading: const Icon(Icons.spoke_outlined),
-              title: const Text('pages.spoolman.filament_details.spools_card').tr(),
-              trailing: total != null && total > 0
-                  ? Chip(
-                      visualDensity: VisualDensity.compact,
-                      label: Text(numFormat.format(total)),
-                      labelStyle: TextStyle(color: themeData.colorScheme.onSecondary),
-                      backgroundColor: themeData.colorScheme.secondary,
-                    )
-                  : null,
-            );
-          }),
+          Consumer(
+            builder: (context, ref, _) {
+              final themeData = Theme.of(context);
+              final numFormat = NumberFormat.compact(locale: context.locale.toStringWithSeparator());
+              final total = ref.watch(
+                spoolListProvider(
+                  machineUUID,
+                  pageSize: _initial,
+                  page: 0,
+                  filters: filter,
+                ).select((d) => d.valueOrNull?.totalItems),
+              );
+              return ListTile(
+                leading: const Icon(Icons.spoke_outlined),
+                titleAlignment: ListTileTitleAlignment.center,
+                title: const Text('pages.spoolman.spool.other').tr(),
+                subtitle: Text(title),
+                trailing: total != null && total > 0
+                    ? Chip(
+                        visualDensity: VisualDensity.compact,
+                        label: Text(numFormat.format(total)),
+                        labelStyle: TextStyle(color: themeData.colorScheme.onSecondary),
+                        backgroundColor: themeData.colorScheme.secondary,
+                      )
+                    : null,
+              );
+            },
+          ),
           const Divider(),
           Flexible(
             child: SpoolmanStaticPagination(
@@ -343,38 +345,39 @@ class _FilamentDetailPageController extends _$FilamentDetailPageController
   }
 
   void onAction(ThemeData themeData) async {
-    final metaTags = [
-      if (state.vendor != null) state.vendor!.name,
-      if (state.material != null) state.material,
-    ];
+    final metaTags = [if (state.vendor != null) state.vendor!.name, if (state.material != null) state.material];
 
-    final res = await bottomSheetServiceRef.show(BottomSheetConfig(
-      type: SheetType.actions,
-      data: ActionBottomSheetArgs(
-        title: RichText(
-          text: TextSpan(
-            text: '#${state.id} ',
-            style: themeData.textTheme.titleSmall
-                ?.copyWith(fontSize: themeData.textTheme.titleSmall?.fontSize?.let((it) => it - 2)),
-            children: [
-              TextSpan(text: '${state.name}', style: themeData.textTheme.titleSmall),
-            ],
+    final res = await bottomSheetServiceRef.show(
+      BottomSheetConfig(
+        type: SheetType.actions,
+        data: ActionBottomSheetArgs(
+          title: RichText(
+            text: TextSpan(
+              text: '#${state.id} ',
+              style: themeData.textTheme.titleSmall?.copyWith(
+                fontSize: themeData.textTheme.titleSmall?.fontSize?.let((it) => it - 2),
+              ),
+              children: [TextSpan(text: '${state.name}', style: themeData.textTheme.titleSmall)],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          subtitle: Text(
+            metaTags.isEmpty ? tr('pages.spoolman.filament.one') : metaTags.join(' – '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          leading: SpoolWidget(color: state.colorHex, height: 33, width: 15),
+          actions: [
+            FilamentSpoolmanSheetAction.addSpool,
+            DividerSheetAction.divider,
+            FilamentSpoolmanSheetAction.edit,
+            FilamentSpoolmanSheetAction.clone,
+            FilamentSpoolmanSheetAction.delete,
+          ],
         ),
-        subtitle: Text(metaTags.isEmpty ? tr('pages.spoolman.filament.one') : metaTags.join(' – '),
-            maxLines: 1, overflow: TextOverflow.ellipsis),
-        leading: SpoolWidget(color: state.colorHex, height: 33, width: 15),
-        actions: [
-          FilamentSpoolmanSheetAction.addSpool,
-          DividerSheetAction.divider,
-          FilamentSpoolmanSheetAction.edit,
-          FilamentSpoolmanSheetAction.clone,
-          FilamentSpoolmanSheetAction.delete,
-        ],
       ),
-    ));
+    );
 
     if (!res.confirmed) return;
     talker.info('[FilamentDetailPage] Selected action: ${res.data}');

@@ -1,8 +1,85 @@
 # Mobileraker - Changelog
 
+## [2.9.6] - 2025-12-22
+
+### Enhancements
+
+- **Support Force Move**: The move axis card now supports Klipper's `FORCE_MOVE` command for low-level axis diagnostics.
+  This allows advanced users to move individual steppers without kinematic constraints, boundary checks, or coordinated
+  multi-axis movement—useful for debugging mechanical issues or testing stepper response.
+
+- **Custom Load/Unload Sequences**: Users can now configure custom G-Code sequences in machine settings to execute
+  during filament loading and unloading operations, replacing Mobileraker's default sequences with their own
+  printer-specific commands when using the filament load/unload wizards.
+
+- **Fab with Keyboard**: The floating action button (FAB) on the dashboard page now hides when the keyboard is open,
+  preventing
+  obstruction of input fields and enhancing user experience during text entry.
+
+- **Config Editor Improvements**: The configuration file editor now also uses the monospaced font for better readability
+  and
+  alignment of code, making it easier to edit configuration files directly within the app.
+
+### Bug Fixes
+
+- **Fans Card**: Fixed an issue where the fans card would not display fans %-speed correctly when `max_power` was set to
+  a value other than 1.0.
+- **Console History Color**: Fixed an issue where the console history text color for responses was not correctly set in
+  light mode, resulting in poor visibility.
+- **Missing Characters**: Unified font styles across themes to prevent missing characters in certain languages, ensuring
+  all text is displayed correctly regardless of the selected language.
+
+## [2.9.5] - 2025-11-22
+
+### Enhancements
+
+- **Customizable Dashboard**: Simplified the operations of the customizable dashboard in terms of layout management.
+- **Console Interface**: Enhanced console page with modernized styling and improved visual density for better user
+  experience
+- **File Management**: Added backup file filtering capabilities for Klipper backup files and improved console settings
+  through dedicated bottom sheet
+- **Spoolman Integration**: Enhanced spool visualization with improved color mapping and filtering system
+- **Markdown Rendering**: Replaced flutter_markdown with flutter_markdown_plus for better functionality and performance
+- **User Interface**: Updated console input to support optional empty input suffixes and improved overall page styling
+- **Data Import/Export**: Added import/export functionality for app data (Machines & Layouts). Located on the settings
+  page.
+
+### Bug Fixes
+
+- **File Sharing**: Fixed broken sharing of files and text in ISO 26 compatibility mode
+- **Console Interface**: Resolved console history refresh pull down icon and text display issues
+- **File Operations**: Fixed filtering for Klipper backup files to work correctly
+- **Build System**: Ensured app can always build successfully with improved build configuration
+
+### Development Improvements
+
+- **Color System**: Introduced general RemappingColorMapper for better color handling across the application
+- **Settings Management**: Unified setting bottom sheet design for consistent user experience
+
+## [2.9.4] - 2025-10-07
+
+### Enhancements
+
+- **GCode Console Card**: Added a GCode console card to the dashboard, allowing users to send GCode commands directly
+  from the dashboard.
+- **Temperature Preset GCode**: Added support for custom GCode execution when temperature presets are
+  applied [#530](https://github.com/Clon1998/mobileraker/issues/530)
+- **Empty directory indicator**: File selection bottom sheet now consistently displays the empty directory widget,
+  matching the behavior of the main file manager.
+
+### Bug Fixes
+
+- **Remote services**: Fixed crash when linking OctoEverywhere or Obico
+  accounts. [#533](https://github.com/Clon1998/mobileraker/issues/533)
+- **Fullscreen Webcam view**: Resolved temperature display text wrapping issue in fullscreen webcam
+  mode. [#536](https://github.com/Clon1998/mobileraker/issues/536)
+- **Webcam configuration**: Webcam settings can now be edited regardless of Klippy/MCU connection status.
+- **Subfolder navigation**: File selection bottom sheet now properly handles file selection from subfolders.
+
 ## [2.9.1] - 2025-08-27
 
 ### Localization
+
 - Added the 🇨🇿 czech translation, thanks to [@Marek-Dvorny](https://github.com/Marek-Dvorny).
 - Updated the 🇷🇺 russian translation, thanks to DrPerryCoke.
 
@@ -15,13 +92,15 @@
   desired model in the list.
 - **Bed-Mesh Selection**: The bed-mesh selection is now sorted by name, improving usability when selecting
   different bed meshes.
-- **Non-Motion Setups**: Removed the requirement for `virtual_sdcard`, `extruder` and `motion_report` objects, enabling users to
+- **Non-Motion Setups**: Removed the requirement for `virtual_sdcard`, `extruder` and `motion_report` objects, enabling
+  users to
   control non-printer Klipper projects (such as filament driers, pcb-hot plates, or other projects) through Mobileraker.
 - **Print Job Bottom Sheet**: A new bottom sheet now allows users to select a print job directly from the overview
   page. This makes it easier for any users running a farm to more quickly select a new print job.
 - **Pwm_Tool Object**: Added support for the `pwm_tool` object, allowing users to control PWM tools directly from the
   app.
-- **File Selection**: Added a new file selection bottom sheet that makes it easier to browse and select files within the app.
+- **File Selection**: Added a new file selection bottom sheet that makes it easier to browse and select files within the
+  app.
 
 ### Bug Fixes
 
